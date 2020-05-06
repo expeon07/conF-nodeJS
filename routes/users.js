@@ -13,7 +13,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/signup', (req, res, next) => {
-  // check if username exists
   User.register(new User({username: req.body.username}), 
     req.body.password, (err, user) => {
     if(err) {
@@ -22,18 +21,30 @@ router.post('/signup', (req, res, next) => {
       res.json({ err: err});
     } 
     else {
-      passport.authenticate('local')(req, res, () => {
-        res.statusCode = 200;
-        res.setHeader('Context-Type', 'application/json');
-        res.json({success: true, status: 'Registration Successful!'});
-      });
+      if (req.body.firstname)
+        user.firstname = req.body.firstname;
+      if (req.body.lastname)
+        user.lastname = req.body.lastname;
+      user.save((err, user) => {
+        if (err) {
+          res.statusCode = 500;
+          res.setHeader('Context-Type', 'application/json');
+          res.json({ err: err });
+          return;
+        }
+        passport.authenticate('local')(req, res, () => {
+          res.statusCode = 200;
+          res.setHeader('Context-Type', 'application/json');
+          res.json({success: true, status: 'Registration Successful!'});
+        });
+      })
     }
   });
 });
 
 // authentication
 // post because need to submit information
-router.post('/login', passport.authenticate('local'), (req, res) => {
+router.post('/login', passport.authenticate('local'), (req, res, next) => {
 
   var token = authenticate.getToken({_id: req.user._id})
   res.statusCode = 200;
