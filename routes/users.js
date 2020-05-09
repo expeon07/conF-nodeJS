@@ -54,7 +54,7 @@ router.post('/signup', cors.corsWithOptions, (req, res, next) => {
 // authentication
 // post because need to submit information
 router.post('/login', cors.corsWithOptions, passport.authenticate('local'), (req, res, next) => {
-
+  // create jsonweb token
   var token = authenticate.getToken({_id: req.user._id})
   res.statusCode = 200;
   res.setHeader('Context-Type', 'application/json');
@@ -74,5 +74,17 @@ router.get('/logout', (req, res) => {
     next(err);
   }
 });
+
+// use OAuth if user uses facebook to login
+// use token if user logs in again
+router.get('/facebook/token', passport.authenticate('facebook-token'), (req, res) => {
+  if (req.user) {
+    // create jsonweb token
+    var token = authenticate.getToken({_id: req.user._id})
+    res.statusCode = 200;
+    res.setHeader('Context-Type', 'application/json');
+    res.json({success: true, token: token, status: 'You are successfully logged in!'});
+  }
+})
 
 module.exports = router;
